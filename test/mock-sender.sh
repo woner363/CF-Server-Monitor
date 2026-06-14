@@ -79,8 +79,8 @@ while true; do
     TIME_DELTA=$((LOOP_START_TIME - PREV_LOOP_TIME))
     [ "${TIME_DELTA}" -le 0 ] && TIME_DELTA=${REPORT_INTERVAL}
     
-    RX_NOW=$((RX_PREV + $(generate_int 10000 1000000)))
-    TX_NOW=$((TX_PREV + $(generate_int 10000 1000000)))
+    RX_NOW=$((RX_PREV + $(generate_int 1000000 50000000)))
+    TX_NOW=$((TX_PREV + $(generate_int 100000 5000000)))
     
     RX_DELTA=$((RX_NOW - RX_PREV))
     TX_DELTA=$((TX_NOW - TX_PREV))

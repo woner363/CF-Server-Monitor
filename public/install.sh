@@ -423,15 +423,19 @@ while true; do
     fi
     OS=${OS_RAW:-"Linux"}
     ARCH=$(uname -m)
-    BOOT_TIME=$(
-    awk '
-    $1=="btime"{
-        print $2 * 1000
-        exit
-    }
-    ' /proc/stat 2>/dev/null
-    )
-    BOOT_TIME=${BOOT_TIME:-0}
+    BOOT_TIME=$(awk '$1=="btime"{print $2}' /proc/stat 2>/dev/null)
+    if [ -n "${BOOT_TIME:-}" ]; then
+        BOOT_TIME=$((BOOT_TIME * 1000))
+    else
+        uptime_sec=$(awk '{print int($1)}' /proc/uptime 2>/dev/null || echo 0)
+        now_sec=$(date +%s)
+
+        if [ "$uptime_sec" -gt 0 ] 2>/dev/null; then
+            BOOT_TIME=$(( (now_sec - uptime_sec) * 1000 ))
+        else
+            BOOT_TIME=0
+        fi
+    fi
     CPU_INFO=$(grep -m 1 'model name' /proc/cpuinfo 2>/dev/null | awk -F: '{print $2}' | xargs || echo "")
     [ -z "${CPU_INFO}" ] && CPU_INFO=${ARCH}
     CPU_CORES=$(nproc 2>/dev/null || grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo "1")

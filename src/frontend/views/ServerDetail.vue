@@ -65,6 +65,10 @@
           <span class="sysinfo-label">🌐 {{ trans.totalTraffic }}</span>
           <span class="sysinfo-value sysinfo-small">↓ {{ formatBytes(server.net_rx) }} / ↑ {{ formatBytes(server.net_tx) }}</span>
         </div>
+        <div class="sysinfo-item">
+          <span class="sysinfo-label">⚡ {{ trans.realtimeSpeed }}</span>
+          <span class="sysinfo-value sysinfo-small">↓ {{ formatBytes(server.net_in_speed) }}/s / ↑ {{ formatBytes(server.net_out_speed) }}/s</span>
+        </div>
         <div class="sysinfo-item" v-if="server.net_rx_monthly">
           <span class="sysinfo-label">📊 {{ trans.monthlyTraffic }}</span>
           <span class="sysinfo-value sysinfo-small">↓ {{ formatBytes(server.net_rx_monthly) }} / ↑ {{ formatBytes(server.net_tx_monthly) }}</span>
@@ -412,7 +416,7 @@ const initCharts = () => {
   Chart.defaults.plugins.tooltip.padding = 12
   Chart.defaults.plugins.tooltip.cornerRadius = 2
 
-  const createChartOptions = (unit = '', showLegend = false, yAxisLabel = '') => ({
+  const createChartOptions = (unit = '', showLegend = false, yAxisLabel = '', formatCallback = null, yAxisTickCallback = null) => ({
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: CHART.ANIMATION_DURATION, easing: 'easeOutCubic' },
@@ -452,10 +456,13 @@ const initCharts = () => {
             const value = context.parsed.y
             if (value === null || value === undefined) {
               label += trans.value.timeout
+            } else if (formatCallback) {
+              label += formatCallback(value)
             } else {
               label += typeof value === 'number' ? value.toFixed(2) : value
+              label += unit
             }
-            return '$ ' + label + unit
+            return '$ ' + label
           }
         }
       }
@@ -496,7 +503,7 @@ const initCharts = () => {
           color: axisLabelColor,
           font: { size: 9, family: "'JetBrains Mono', monospace" },
           padding: 8,
-          callback: function(value) { return value + unit; }
+          callback: yAxisTickCallback || function(value) { return value + unit; }
         }
       }
     },
@@ -552,7 +559,7 @@ const initCharts = () => {
           { label: 'Upload', data: [], borderColor: '#4da6ff', backgroundColor: 'rgba(77, 166, 255, 0.03)', fill: true, tension: 0.4, borderWidth: 1.5, pointRadius: 0, hoverRadius: 5, spanGaps: false }
         ]
       },
-      options: createChartOptions(' B/s', true)
+      options: createChartOptions('', true, '', (value) => formatBytes(value) + '/s', (value) => formatBytes(value))
     })
   }
 
