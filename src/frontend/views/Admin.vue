@@ -526,7 +526,7 @@
       <div id="editModal" class="modal-overlay" :class="{ active: showEditModal }">
         <div class="modal-dialog">
           <div class="modal-header">
-            <div class="modal-title">$ vim /etc/server.conf</div>
+            <div class="modal-title">{{ currentServerName }}</div>
             <button class="modal-close" @click="closeEditModal">✕</button>
           </div>
           <input type="hidden" v-model="editForm.id">
@@ -625,9 +625,9 @@
             </div>
           </div>
 
-          <div class="modal-footer">
-            <button @click="closeEditModal" class="btn">{{ trans.cancel }}</button>
+          <div class="modal-footer flex-justify-between">
             <button @click="saveEdit" class="btn btn-primary">{{ trans.save }}</button>
+            <button @click="closeEditModal" class="btn">{{ trans.cancel }}</button>
           </div>
         </div>
       </div>
@@ -635,7 +635,7 @@
       <div id="deleteModal" class="modal-overlay" :class="{ active: showDeleteModal }">
         <div class="modal-dialog">
           <div class="modal-header">
-            <div class="modal-title">$ rm -rf /etc/server.conf</div>
+            <div class="modal-title">{{ currentServerName }}</div>
             <button class="modal-close" @click="closeDeleteModal">✕</button>
           </div>
           <input type="hidden" v-model="deleteServerId">
@@ -672,7 +672,7 @@
       <div id="copyModal" class="modal-overlay" :class="{ active: showCopyModal }">
         <div class="modal-dialog">
           <div class="modal-header">
-            <div class="modal-title">bash -s install</div>
+            <div class="modal-title">{{ currentServerName }}</div>
             <button class="modal-close" @click="closeCopyModal">✕</button>
           </div>
 
@@ -756,9 +756,9 @@
             </div>
           </div>
 
-          <div class="modal-footer flex-justify-end">
+          <div class="modal-footer flex-justify-between">
             <button @click="copyCustomCmd" class="btn btn-primary">{{ copiedCmd ? '✅ ' + trans.copied : '📋 ' + trans.copy }}</button>
-            <button @click="closeCopyModal" class="btn">{{ trans.close }}</button>
+            <button @click="closeCopyModal" class="btn">{{ trans.cancel }}</button>
           </div>
         </div>
       </div>
@@ -894,7 +894,8 @@
             {{ getMessage(d1UsageResult.error) }}
           </div>
 
-          <div class="modal-footer flex-justify-end">
+          <div class="modal-footer flex-justify-between">
+            <div></div>
             <button @click="d1UsageResult = null" class="btn">{{ trans.close }}</button>
           </div>
         </div>
@@ -914,7 +915,8 @@
             </div>
           </div>
 
-          <div class="modal-footer flex-justify-end">
+          <div class="modal-footer flex-justify-between">
+            <div></div>
             <button @click="validationError = null" class="btn">{{ trans.close }}</button>
           </div>
         </div>
@@ -941,8 +943,27 @@
             </div>
           </div>
 
-          <div class="modal-footer flex-justify-end">
+          <div class="modal-footer flex-justify-between">
+            <div></div>
             <button @click="saveResult = null" class="btn">{{ trans.close }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="alertMessage" class="modal-overlay active">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div class="modal-title">$ alert</div>
+            <button class="modal-close" @click="alertMessage = null">✕</button>
+          </div>
+
+          <div class="mb-4">
+            <p class="text-secondary text-sm">{{ alertMessage }}</p>
+          </div>
+
+          <div class="modal-footer flex-justify-between">
+            <div></div>
+            <button @click="alertMessage = null" class="btn">{{ trans.close }}</button>
           </div>
         </div>
       </div>
@@ -1094,6 +1115,7 @@ const dbResult = ref(null)
 const d1UsageLoading = ref(false)
 const d1UsageResult = ref(null)
 const validationError = ref(null)
+const alertMessage = ref(null)
 
 const testNotificationLoading = ref(false)
 
@@ -1101,6 +1123,7 @@ const saveResult = ref(null)
 
 const showCopyModal = ref(false)
 const copyServerId = ref('')
+const currentServerName = ref('')
 const targetOs = ref('linux')
 const collectInterval = ref(0)
 const reportInterval = ref(60)
@@ -1539,6 +1562,7 @@ const getUninstallCommand = () => {
 const copyCmd = (serverId) => {
   const server = servers.value.find(s => s.id === serverId)
   copyServerId.value = serverId
+  currentServerName.value = server?.name || ''
   targetOs.value = 'linux'
   collectInterval.value = server?.collect_interval ?? 0
   reportInterval.value = server?.report_interval || 60
@@ -1651,6 +1675,7 @@ const openEditModal = (server) => {
     ping_mode: server.ping_mode || 'http',
     is_hidden: server.is_hidden === '1'
   }
+  currentServerName.value = server.name || ''
   showEditModal.value = true
 }
 
@@ -1692,6 +1717,8 @@ const saveEdit = async () => {
 
   const openDeleteModal = (id) => {
     deleteServerId.value = id
+    const server = servers.value.find(s => s.id === id)
+    currentServerName.value = server?.name || ''
     showDeleteModal.value = true
   }
 
@@ -1715,7 +1742,10 @@ const saveEdit = async () => {
   }
 
   const batchDelete = async () => {
-    if (selectedServers.value.length === 0) return alert(trans.value.selectServers)
+    if (selectedServers.value.length === 0) {
+      alertMessage.value = trans.value.selectServers
+      return
+    }
     if (!confirm(trans.value.confirmDeleteServers + selectedServers.value.length + trans.value.irreversible)) return
 
     try {
@@ -1789,7 +1819,8 @@ const getStatusText = (server) => {
     const file = e.target.files[0]
     if (!file) return
     if (file.size > 800 * 1024) {
-      alert(trans.value.imageSizeWarning)
+      alertMessage.value = trans.value.imageSizeWarning
+      return
     }
     const reader = new FileReader()
     reader.onload = function(event) {
@@ -1869,12 +1900,12 @@ const sendTestNotification = async () => {
       tg_chat_id: settings.value.tg_chat_id
     })
     if (!result.error) {
-      alert(getMessage(result.data.message) || trans.value.testNotificationSent)
+      alertMessage.value = getMessage(result.data.message) || trans.value.testNotificationSent
     } else {
-      alert(getMessage(result.error) || trans.value.testNotificationFailed)
+      alertMessage.value = getMessage(result.error) || trans.value.testNotificationFailed
     }
   } catch (e) {
-    alert(trans.value.testNotificationFailed + ': ' + e.message)
+    alertMessage.value = trans.value.testNotificationFailed + ': ' + e.message
   } finally {
     testNotificationLoading.value = false
   }
