@@ -13,6 +13,18 @@ const getAdminHash = () => {
   return '#/admin'
 }
 
+const redirectToAdminLogin = () => {
+  if (typeof window === 'undefined') return
+
+  const adminHash = getAdminHash()
+  if (window.location.hash.startsWith(adminHash)) {
+    window.location.reload()
+    return
+  }
+
+  window.location.hash = adminHash
+}
+
 const createHeaders = (includeAuth = true, includeTurnstile = true, baseUrl = null, options = {}) => {
   const {
     includeTurnstileToken = includeTurnstile,
@@ -52,7 +64,7 @@ const handleResponse = async (res, options = {}) => {
   if (res.status === 401) {
     localStorage.removeItem('jwt_token')
     if (autoRedirect) {
-      window.location.hash = getAdminHash()
+      redirectToAdminLogin()
     }
     return { error: DEFAULT_ERROR_MESSAGES[401], status: 401 }
   }
