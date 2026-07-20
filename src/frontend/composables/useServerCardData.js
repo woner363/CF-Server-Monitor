@@ -53,6 +53,7 @@ export function useServerCardData(props) {
   }
 
   const cpuPercent = computed(() => clampPercent(Number.parseFloat(props.server.cpu || 0) || 0))
+  const cpuCores = computed(() => parseInt(props.server.cpu_cores) || 0)
   const ramPercent = computed(() => {
     const total = Number.parseFloat(props.server.ram_total) || 0
     if (total > 0) {
@@ -87,8 +88,11 @@ export function useServerCardData(props) {
     return trafficUsagePercent.value.toFixed(1)
   })
   const trafficLimitText = computed(() => {
-    if (!trafficLimitSummary.value) return ''
-    return `${formatBytes(trafficLimitSummary.value.usedBytes)} / ${formatBytes(trafficLimitSummary.value.limitBytes)}`
+    if (trafficLimitSummary.value){
+      return `${formatBytes(trafficLimitSummary.value.usedBytes)} / ${formatBytes(trafficLimitSummary.value.limitBytes)}`
+    }else{
+      return `↓ ${totalRxMonthly.value} ↑ ${totalTxMonthly.value}`
+    }
   })
 
   const tagList = computed(() => String(props.server.tags || '')
@@ -102,6 +106,8 @@ export function useServerCardData(props) {
   const netOutSpeed = computed(() => formatBytes(props.server.net_out_speed))
   const totalRx = computed(() => formatBytes(props.server.net_rx))
   const totalTx = computed(() => formatBytes(props.server.net_tx))
+  const totalRxMonthly = computed(() => formatBytes(props.server.net_rx_monthly))
+  const totalTxMonthly = computed(() => formatBytes(props.server.net_tx_monthly))
 
   const loadAvg = computed(() => {
     const raw = String(props.server.load_avg || '').trim()
@@ -220,6 +226,7 @@ export function useServerCardData(props) {
     statusColor,
     statusText,
     cpuPercent,
+    cpuCores,
     ramPercent,
     diskPercent,
     trafficLimitSummary,
@@ -233,6 +240,8 @@ export function useServerCardData(props) {
     netOutSpeed,
     totalRx,
     totalTx,
+    totalRxMonthly,
+    totalTxMonthly,
     loadAvg,
     uptimeText,
     ramUsageText,

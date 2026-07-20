@@ -41,7 +41,7 @@
           <span class="metric-ring-center">{{ roundedPercent(cpuPercent) }}%</span>
         </div>
         <div class="metric-ring-label">CPU</div>
-        <div class="metric-ring-subtext">{{ cpuPercent.toFixed(1) }}%</div>
+        <div class="metric-ring-subtext">{{ cpuCores }} Cores</div>
       </div>
 
       <div class="metric-ring-item">
@@ -88,12 +88,12 @@
           <span>↓ {{ totalRx }}</span>
         </span>
       </div>
-      <div v-if="sysConfig.show_tf && trafficLimitSummary" class="server-card-limit-section">
+      <div v-if="sysConfig.show_tf" class="server-card-limit-section">
         <div class="server-card-limit-header">
           <span>{{ trans.monthlyTraffic }}</span>
-          <span>{{ trafficLimitText }} | {{ trafficLimitPercentText }}%</span>
+          <span>{{ trafficLimitText }} | <template v-if="trafficLimitSummary">{{ trafficLimitPercentText }}%</template><template v-else>Unlimited</template></span>
         </div>
-        <div class="server-card-limit-bar">
+        <div v-if="trafficLimitSummary" class="server-card-limit-bar">
           <div class="server-card-limit-fill" :style="{ width: Math.min(100, trafficUsagePercent) + '%' }"></div>
         </div>
       </div>
@@ -132,6 +132,7 @@ const {
   statusColor,
   statusText,
   cpuPercent,
+  cpuCores,
   ramPercent,
   diskPercent,
   trafficLimitSummary,

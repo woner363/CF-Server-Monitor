@@ -70,8 +70,8 @@
       </div>
       <div class="stat-row">
         <span class="stat-key">TRF</span>
-        <span class="net-down">▼ {{ totalRx }}</span>
-        <span class="net-up">▲ {{ totalTx }}</span>
+        <span class="net-down">▼ {{ totalRxMonthly }}</span>
+        <span class="net-up">▲ {{ totalTxMonthly }}</span>
         <span v-if="sysConfig.show_tf && server.traffic_limit" class="stat-limit">/ 📦 {{ formatBytes(server.traffic_limit * 1024 * 1024 * 1024) }}</span>
       </div>
       <div v-if="sysConfig.show_time" class="stat-row stat-time-row">
@@ -133,8 +133,8 @@ const {
   tagColorClass,
   netInSpeed,
   netOutSpeed,
-  totalRx,
-  totalTx,
+  totalRxMonthly,
+  totalTxMonthly,
   loadAvg,
   dataTimeText,
   isExpired,
